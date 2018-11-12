@@ -136,34 +136,34 @@ bot.on('message', message => {
 				
 				if(msg[1] == 'play')  
 				{
-					if (queue[message.guild.id] === undefined) return message.channel.sendMessage(`เพิ่มเพลงลงในลิสก่อนนะ โดยการใช้ !!music add [url]`);
+					if (queue[message.guild.id] === undefined) return message.channel.sendMessage(`Please add music to the list by using !!music add [url]`);
 					if (!message.guild.voiceConnection)
 					{
 						message.member.voiceChannel.join();
 					}
-					if (queue[message.guild.id].playing) return message.channel.sendMessage('กำลังเล่นอยู่....');
+					if (queue[message.guild.id].playing) return message.channel.sendMessage('I\'m playing!');
 					let dispatcher;
 					queue[message.guild.id].playing = true;
 			
 					console.log(queue);
 					(function play(song) {
 						console.log(song);
-						if (song === undefined) return message.channel.sendMessage('คิวเพลงหมดแล้วน้าา').then(() => {
+						if (song === undefined) return message.channel.sendMessage('Queue is now empty').then(() => {
 							queue[message.guild.id].playing = false;
 							//message.member.voiceChannel.leave();
 						});
-						message.channel.sendMessage(`กำลังเล่น: **${song.title}** ขอโดย: **${song.requester}**`);
+						message.channel.sendMessage(`Playing: **${song.title}** requested by: **${song.requester}**`);
 						dispatcher = message.guild.voiceConnection.playStream(ytdl(song.url, { audioonly: true }));
 						let collector = message.channel.createCollector(m => m);
 						collector.on('message', m => {
 							if (m == ('!!music pause')) {
-								message.channel.sendMessage('หยุดแล้วน้า').then(() => {dispatcher.pause();});
+								message.channel.sendMessage('Pausing').then(() => {dispatcher.pause();});
 							} else if (m == ('!!music resume')){
-								message.channel.sendMessage('ต่อแล้วน้า').then(() => {dispatcher.resume();});
+								message.channel.sendMessage('Resuming').then(() => {dispatcher.resume();});
 							} else if (m == ('!!music skip')){
-								message.channel.sendMessage('ข้ามแล้วน้า').then(() => {dispatcher.end();});
+								message.channel.sendMessage('Skipping').then(() => {dispatcher.end();});
 							} else if (m == ('!!music time')){
-								message.channel.sendMessage(`เวลาตอนนี้คือ: ${Math.floor(dispatcher.time / 60000)}:${Math.floor((dispatcher.time % 60000)/1000) <10 ? '0'+Math.floor((dispatcher.time % 60000)/1000) : Math.floor((dispatcher.time % 60000)/1000)}`);
+								message.channel.sendMessage(`Current time: ${Math.floor(dispatcher.time / 60000)}:${Math.floor((dispatcher.time % 60000)/1000) <10 ? '0'+Math.floor((dispatcher.time % 60000)/1000) : Math.floor((dispatcher.time % 60000)/1000)}`);
 							}
 						});
 						dispatcher.on('end', () => {
@@ -181,32 +181,32 @@ bot.on('message', message => {
 				else if(msg[1] == 'add')  
 			 	{
 					let url = msg[2];
-					if (url == '' || url === undefined) return message.channel.sendMessage(`ใส่เป็น URL ของยูทูปน้า`);
+					if (url == '' || url === undefined) return message.channel.sendMessage(`Please enter Youtube valid link`);
 					ytdl.getInfo(url, (err, info) => {
-						if(err) return message.channel.sendMessage('ลิ้งค์ยูทูปผิดพลาดน้า: ' + err);
+						if(err) return message.channel.sendMessage('Youtube link request failed, Please check the link again: ' + err);
 						if (!queue.hasOwnProperty(message.guild.id)) queue[message.guild.id] = {}, queue[message.guild.id].playing = false, queue[message.guild.id].songs = [];
 						queue[message.guild.id].songs.push({url: url, title: info.title, requester: message.author.username});
-						message.channel.sendMessage(`เพิ่มเพลง **${info.title}** ลงในลิสต์แล้ว`);
+						message.channel.sendMessage(`Added **${info.title}** to the list`);
 					});
 					message.delete();
 				}
 				else if(msg[1] == 'list')  
 	 			{
-					if (queue[message.guild.id] === undefined) return message.channel.sendMessage(`ลิสต์เพลงว่างเปล่าจ้า เพิ่มเพลงโดยการใส่ !!music add [url] น้า`);
+					if (queue[message.guild.id] === undefined) return message.channel.sendMessage(`Music queue is empty, add one by using !!music add [url]`);
 					let tosend = [];
-					queue[message.guild.id].songs.forEach((song, i) => { tosend.push(`${i+1}. ${song.title} - ขอโดย: ${song.requester}`);});
-					message.channel.sendMessage(`__** คิวเพลงของ ${message.guild.name} :**__ ตอนนี้มี **${tosend.length}** เพลงกำลังเข้าคิว  ${(tosend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${tosend.slice(0,15).join('\n')}\`\`\``);
+					queue[message.guild.id].songs.forEach((song, i) => { tosend.push(`${i+1}. ${song.title} - By: ${song.requester}`);});
+					message.channel.sendMessage(`__** Music queue of ${message.guild.name} :**__ Right now have **${tosend.length}** music in the queue  ${(tosend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${tosend.slice(0,15).join('\n')}\`\`\``);
 				}
 				else if(msg[1] == 'help')
 				{
 					message.channel.send(`__**คำสั่งที่ใช้ฟังเพลงกับบอทปิ๊งเลดี้**__	\`\`\`
-					!!music add -> เพื่มเพลงลงในคิว (!!music -add [ลิ้งค์ยูทูป])
-					!!music list -> เช็คคิว
-					!!music skip -> ข้ามเพลง
-					!!music pause -> หยุดเพลงหลังจากเพลงนี้จบ
-					!!music play -> เล่นสิ รอไร
-					!!music resume -> เล่นเพลง ต่อจาก pause
-					!!music time -> เวลาปัจจุบันจองเพลง
+					!!music add -> add music to the list (!!music -add [ลิ้งค์ยูทูป])
+					!!music list -> list queue
+					!!music skip -> skip the music
+					!!music pause -> pause after this song
+					!!music play -> play the music
+					!!music resume -> resume the music after pause
+					!!music time -> Current time
 								\`\`\``);
 				}
 						
@@ -217,7 +217,7 @@ bot.on('message', message => {
 					{
 						//channel(connection => {connection.disconnect()});
 						//bot.leaveVoiceChannel(message.author.voiceChannel);						
-						message.channel.send('ไม่ย์');
+						message.channel.send('Nope');
 						//message.channel.send('อยู่ระหว่างเรียนอยู่และศึกษางับ ใครรู้ PM มาที่ Kirize14@7552 หน่อย ');
 						console.log(message.member+' used !!go away but he is not in the room');
 					}
@@ -225,7 +225,7 @@ bot.on('message', message => {
 					{
 						wanttoplay = 0;
 						nowisplay = 0;
-						message.channel.send('ไปแล้วน้าา');
+						message.channel.send('Going .... ');
 						channel.join().then(connection => {connection.disconnect()});
 						console.log(message.member+' used !!go away');
 					}
@@ -235,12 +235,12 @@ bot.on('message', message => {
 				const channel = message.member.voiceChannel;
 				if(!channel)
 					{
-						message.channel.send('เข้าห้องก่อน แล้วเดี๋ยวจะตามไป งุ้ย');
+						message.channel.send('Enter the room first');
 						console.log(message.member+' used !!move here but he is not in the room');
 					}
 				else
 					{
-						message.channel.send('มาแย้วววว');
+						message.channel.send('Hi, I\'m here!');
 						channel.join();	
 						console.log(message.member+' used !!move here');
 					}
