@@ -1,3 +1,8 @@
 # Discord.js-bot
-Hi, I have done a bot but they need to be re-config a lot.
-They run on nodejs
+Discord bot that can do many things.
+
+Make your own one! 
+
+And Share to everybody!
+
+[How to install](https://discord.js.org/#/)
