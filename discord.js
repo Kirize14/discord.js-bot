@@ -1,6 +1,6 @@
 
 
-//================== BOT TOKEN ! ====================
+//================== BOT TOKEN ! ========================
 const token ='INSERT Your token here';
 
 //================== Header (Required Don't edit anything in this area please) ====================
